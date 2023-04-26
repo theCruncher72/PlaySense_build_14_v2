@@ -5,8 +5,12 @@ import re
 import pickle
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
-from bokeh.plotting import figure
+import altair as alt
 
+st.set_page_config(
+    page_title="Home",
+    page_icon="🏠",
+)
 
 # def add_bg_from_url():
 #     st.markdown(
@@ -98,6 +102,21 @@ user_input = st.sidebar.selectbox(
     'Enter the name of the game:',
     df['title'].values)
 button = st.sidebar.button("Submit")
+st.session_state["uinput"] = user_input
+
+st.session_state['steam_prices'] = []
+Dump1 = df[df['title'] == user_input]['steam_price'].iloc[0]
+st.session_state['steam_prices'].append(Dump1)
+st.session_state['epic_prices'] = []
+Dump2 = df[df['title'] == user_input]['epic_price'].iloc[0]
+st.session_state['epic_prices'].append(Dump2)
+st.session_state['ps_prices'] = []
+Dump3 = df[df['title'] == user_input]['ps_price'].iloc[0]
+st.session_state['ps_prices'].append(Dump3)
+st.session_state['titles'] = []
+st.session_state['titles'].append(user_input)
+
+
 
 # Display the user input and the recommendations on the main page
 if button:
@@ -126,54 +145,60 @@ if button:
         with tab4:
             st.write(f"Date Released : {df[df['title'] == user_input]['release'].iloc[0]}")
     # st.write("---")
+
     sub_left, sub_right = st.columns(2)
     with sub_left:
         st.image("https://support.steampowered.com/images/faq/steam_universe/Hardware_SteamLogo_Banner.png")
     with sub_right:
-        st.markdown(get_st_button_a_tag(df[df['title'] == user_input]['steam_url'].iloc[0], 'Steam🔗'),
+        st.markdown(get_st_button_a_tag(df[df['title'] == user_input]['steam_url'].iloc[0], 'Click here🔗'),
                     unsafe_allow_html=True)
-        st.write(f"Price: {df[df['title'] == user_input]['steam_price'].iloc[0]}")
+        st.write(f"Price: ₹{df[df['title'] == user_input]['steam_price'].iloc[0]}")
     sub_left, sub_right = st.columns(2)
     with sub_left:
         st.image("https://media.sidefx.com/uploads/article/epic-games-invests-in-sidefx/epic_logo_black_banner3.jpg")
     with sub_right:
-        st.markdown(get_st_button_a_tag(df[df['title'] == user_input]['epic_url'].iloc[0], 'Epic🔗'),
+        st.markdown(get_st_button_a_tag(df[df['title'] == user_input]['epic_url'].iloc[0], 'Click here🔗'),
                     unsafe_allow_html=True)
-        st.write(f"Price: {df[df['title'] == user_input]['epic_price'].iloc[0]}")
+        st.write(f"Price: ₹{df[df['title'] == user_input]['epic_price'].iloc[0]}")
     sub_left, sub_right = st.columns(2)
     with sub_left:
         st.image("https://mmos.com/wp-content/uploads/2021/03/playstation-store-logo-banner.jpg")
     with sub_right:
-        st.markdown(get_st_button_a_tag(df[df['title'] == user_input]['ps_url'].iloc[0], 'PStore🔗'),
+        st.markdown(get_st_button_a_tag(df[df['title'] == user_input]['ps_url'].iloc[0], 'Click here🔗'),
                     unsafe_allow_html=True)
-        st.write(f"Price: {df[df['title'] == user_input]['ps_price'].iloc[0]}")
+        st.write(f"Price: ₹{df[df['title'] == user_input]['ps_price'].iloc[0]}")
+
+
 
     game_stores = ["Steam", "Epic Games", "PlayStation Store"]
     counts = [int(df[df['title'] == user_input]['steam_price'].iloc[0]), int(df[df['title'] == user_input]['epic_price'].iloc[0]), int(df[df['title'] == user_input]['ps_price'].iloc[0])]
 
+    #altair-bar-chart
+    games_df = pd.DataFrame({
+        "Store": game_stores,
+        "Prices": counts,
+    })
+
+    chart = alt.Chart(games_df).mark_bar().encode(
+        y='Store',
+        x='Prices'
+    ).properties(
+        width=550,
+        height=200,
+    )
+
+    st.altair_chart(chart)
+
+
     # sorting the bars means sorting the range factors
-    sorted_gs = sorted(game_stores, key=lambda x: counts[game_stores.index(x)])
+    # sorted_gs = sorted(game_stores, key=lambda x: counts[game_stores.index(x)])
 
-    p = figure(x_range=sorted_gs, height=350, title="Price Comparison",
-               toolbar_location=None, tools="")
-
-    p.vbar(x=game_stores, top=counts, width=0.3)
-
-    p.xgrid.grid_line_color = None
-    p.y_range.start = 0
-    st.bokeh_chart(p, use_container_width=True)
-
-
-    # st.markdown(get_st_button_a_tag(df[df['title'] == user_input]['steam_url'].iloc[0], 'Steam'), unsafe_allow_html=True)
-    #
-    # st.write(f"Link: {df[df['title'] == user_input]['epic_url'].iloc[0]}")
-    #
-    # st.write(f"Link: {df[df['title'] == user_input]['ps_url'].iloc[0]}")
     st.write("---")
     st.subheader("Here are some games you might like:")
     recommendations = get_recommendations(user_input)
     for i, game in enumerate(recommendations):
         st.write(f"{i + 1}. {game}")
+        st.session_state['titles'].append(game)
         left_co, right_co = st.columns(2)
         with left_co:
             game_id = extract_app_id(df[df['title'] == game]['steam_url'].iloc[0])
@@ -201,37 +226,50 @@ if button:
         with sub_left:
             st.image("https://support.steampowered.com/images/faq/steam_universe/Hardware_SteamLogo_Banner.png")
         with sub_right:
-            st.markdown(get_st_button_a_tag(df[df['title'] == game]['steam_url'].iloc[0], 'Steam🔗'),
+            st.markdown(get_st_button_a_tag(df[df['title'] == game]['steam_url'].iloc[0], 'Click here🔗'),
                         unsafe_allow_html=True)
-            st.write(f"Price: {df[df['title'] == game]['steam_price'].iloc[0]}")
+            st.write(f"Price: ₹{df[df['title'] == game]['steam_price'].iloc[0]}")
+            Bump1 = df[df['title'] == game]['steam_price'].iloc[0]
+            st.session_state['steam_prices'].append(Bump1)
         sub_left, sub_right = st.columns(2)
         with sub_left:
             st.image(
                 "https://media.sidefx.com/uploads/article/epic-games-invests-in-sidefx/epic_logo_black_banner3.jpg")
         with sub_right:
-            st.markdown(get_st_button_a_tag(df[df['title'] == game]['epic_url'].iloc[0], 'Epic🔗'),
+            st.markdown(get_st_button_a_tag(df[df['title'] == game]['epic_url'].iloc[0], 'Click here🔗'),
                         unsafe_allow_html=True)
-            st.write(f"Price: {df[df['title'] == game]['epic_price'].iloc[0]}")
+            st.write(f"Price: ₹{df[df['title'] == game]['epic_price'].iloc[0]}")
+            Bump2 = df[df['title'] == game]['epic_price'].iloc[0]
+            st.session_state['epic_prices'].append(Bump2)
         sub_left, sub_right = st.columns(2)
         with sub_left:
             st.image("https://mmos.com/wp-content/uploads/2021/03/playstation-store-logo-banner.jpg")
         with sub_right:
-            st.markdown(get_st_button_a_tag(df[df['title'] == game]['ps_url'].iloc[0], 'PStore🔗'),
+            st.markdown(get_st_button_a_tag(df[df['title'] == game]['ps_url'].iloc[0], 'Click here🔗'),
                         unsafe_allow_html=True)
-            st.write(f"Price: {df[df['title'] == game]['ps_price'].iloc[0]}")
+            st.write(f"Price: ₹{df[df['title'] == game]['ps_price'].iloc[0]}")
+            Bump3 = df[df['title'] == game]['ps_price'].iloc[0]
+            st.session_state['ps_prices'].append(Bump3)
 
         game_stores = ["Steam", "Epic Games", "PlayStation Store"]
         counts = [int(df[df['title'] == game]['steam_price'].iloc[0]),
                   int(df[df['title'] == game]['epic_price'].iloc[0]),
                   int(df[df['title'] == game]['ps_price'].iloc[0])]
-        p = figure(x_range=sorted_gs, height=350, title="Price Comparison",
-                   toolbar_location=None, tools="")
 
-        p.vbar(x=game_stores, top=counts, width=0.3)
+        games_df_2 = pd.DataFrame({
+            "Store": game_stores,
+            "Prices": counts,
+        })
 
-        p.xgrid.grid_line_color = None
-        p.y_range.start = 0
-        st.bokeh_chart(p, use_container_width=True)
+        chart = alt.Chart(games_df_2).mark_bar().encode(
+            y='Store',
+            x='Prices'
+        ).properties(
+            width=550,
+            height=200,
+        )
+
+        st.altair_chart(chart)
 
 
         # st.write(f"Link: {df[df['title'] == game]['steam_url'].iloc[0]}")
