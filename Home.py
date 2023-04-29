@@ -12,23 +12,7 @@ st.set_page_config(
     page_icon="🏠",
 )
 
-# def add_bg_from_url():
-#     st.markdown(
-#          f"""
-#          <style>
-#          .stApp {{
-#              background-image: url("https://img.freepik.com/free-vector/stylish-glowing-digital-red-lines-banner_1017-23964.jpg?w=1380&t=st=1680206320~exp=1680206920~hmac=0ed844c086162640c424e0a2b308c6fba3f4410fa115769971dbf620593b4116");
-#              background-attachment: fixed;
-#              background-size: cover
-#          }}
-#          </style>
-#          """,
-#          unsafe_allow_html=True
-#      )
 
-#
-# add_bg_from_url()
-# Load data
 
 
 def get_st_button_a_tag(url_link, button_name):
@@ -64,39 +48,39 @@ def extract_app_id(url):
 @st.cache_data
 def load_data():
     games_dict = pickle.load(open('test_pkl.pkl', 'rb'))
-    df = pd.DataFrame(games_dict) # a csv file with game titles and descriptions
+    df = pd.DataFrame(games_dict)
     return df
 
 df = load_data()
 
-# Create tf-idf matrix
+
 tfidf = TfidfVectorizer(stop_words="english")
 tfidf_matrix = tfidf.fit_transform(df["tags"])
 
-# Compute cosine similarity
+
 cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
 
-# Create a function to get recommendations based on a game title
+
 def get_recommendations(title, cosine_sim=cosine_sim):
-    # Get the index of the game that matches the title
+
     idx = df[df["title"] == title].index[0]
 
-    # Get the pairwise similarity scores of all games with that game
+
     sim_scores = list(enumerate(cosine_sim[idx]))
 
-    # Sort the games based on the similarity scores
+
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
 
-    # Get the scores of the 10 most similar games
+
     sim_scores = sim_scores[1:11]
 
-    # Get the game indices
+
     game_indices = [i[0] for i in sim_scores]
 
-    # Return the top 10 most similar games
+
     return df["title"].iloc[game_indices]
 
-# Create a sidebar with a text input and a button
+
 st.sidebar.header("PlaySense")
 user_input = st.sidebar.selectbox(
     'Enter the name of the game:',
@@ -118,7 +102,7 @@ st.session_state['titles'].append(user_input)
 
 
 
-# Display the user input and the recommendations on the main page
+
 if button:
     st.title(f"You entered: {user_input}")
 
@@ -132,11 +116,7 @@ if button:
     with right_co:
         tab1, tab2, tab3, tab4 = st.tabs(["Description", "Publisher", "Genre","Release"])
         with tab1:
-            # descr_text = df[df['title'] == game]['descrip'].iloc[0]
-            # word_limit = 20
-            # words = descr_text.split()
-            # limited_text = ' '.join(words[:word_limit])
-            # st.write(limited_text)
+
             st.write(f"Description: {df[df['title'] == user_input]['descrip'].iloc[0]}")
         with tab2:
             st.write(f"Publisher: {df[df['title'] == user_input]['publisher'].iloc[0]}")
@@ -144,7 +124,7 @@ if button:
             st.write(f"Genre: {df[df['title'] == user_input]['categories'].iloc[0]}")
         with tab4:
             st.write(f"Date Released : {df[df['title'] == user_input]['release'].iloc[0]}")
-    # st.write("---")
+
 
     sub_left, sub_right = st.columns(2)
     with sub_left:
@@ -190,8 +170,7 @@ if button:
     st.altair_chart(chart)
 
 
-    # sorting the bars means sorting the range factors
-    # sorted_gs = sorted(game_stores, key=lambda x: counts[game_stores.index(x)])
+
 
     st.write("---")
     st.subheader("Here are some games you might like:")
@@ -209,11 +188,7 @@ if button:
         with right_co:
             tab1, tab2, tab3, tab4 = st.tabs(["Description", "Publisher", "Genre", "Release"])
             with tab1:
-                # descr_text = df[df['title'] == game]['descrip'].iloc[0]
-                # word_limit = 20
-                # words = descr_text.split()
-                # limited_text = ' '.join(words[:word_limit])
-                # st.write(limited_text)
+
                 st.write(f"Description: {df[df['title'] == game]['descrip'].iloc[0]}")
             with tab2:
                 st.write(f"Publisher: {df[df['title'] == game]['publisher'].iloc[0]}")
@@ -272,12 +247,7 @@ if button:
         st.altair_chart(chart)
 
 
-        # st.write(f"Link: {df[df['title'] == game]['steam_url'].iloc[0]}")
-        # st.write(f"Price: {df[df['title'] == game]['steam_price'].iloc[0]}")# a column with game urls
-        # st.write(f"Link: {df[df['title'] == game]['epic_url'].iloc[0]}")
-        # st.write(f"Price: {df[df['title'] == game]['epic_price'].iloc[0]}")
-        # st.write(f"Link: {df[df['title'] == game]['ps_url'].iloc[0]}")
-        # st.write(f"Price: {df[df['title'] == game]['ps_price'].iloc[0]}")
+
         st.write("---")
 else:
     st.title("Welcome to PlaySense")
